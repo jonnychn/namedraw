@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webinar Name Draw</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #controls { margin-bottom: 20px; }
+    #inputControls { margin-bottom: 10px; }
+    #namesInput { width: 100%; height: 100px; padding: 8px; box-sizing: border-box; }
+    #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .grid-item { padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: center; transition: background 0.3s; }
+    .highlight { background: #ffeb3b; }
+    button { cursor: pointer; }
+    #toggleInputBtn, #toggleInstrBtn, #demoBtn { padding: 8px 16px; margin: 5px 5px 5px 0; }
+    #startBtn { padding: 10px 20px; font-size: 16px; border: none; border-radius: 4px; background-color: #28a745; color: white; display: block; margin: 20px auto; }
+    #instructions { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="toggleInstrBtn">Toggle Instructions</button>
+    <button id="demoBtn">Demo</button>
+    <div id="instructions" style="display:none;">
+      <ul>
+        <li>Drop in one full name per line (max 300 names).</li>
+        <li>If you enter more than 300, only the first 300 will be used.</li>
+        <li>Use the <strong>Hide last names</strong> checkbox to anonymize names.</li>
+        <li>Click <strong>Toggle Privacy</strong> to hide/show the input area before drawing.</li>
+        <li>When you’re ready, hit <strong>Hit Go!</strong> to start the draw.</li>
+      </ul>
+    </div>
+    <div id="inputControls">
+      <textarea id="namesInput" placeholder="Enter one full name per line (max 300)"></textarea><br>
+      <label><input type="checkbox" id="privacyToggle"> Hide last names</label><br>
+      <button id="toggleInputBtn">Toggle Privacy</button>
+    </div>
+    <button id="startBtn">Hit Go!</button>
+  </div>
+  <div id="grid"></div>
+
+  <script>
+    const namesInput = document.getElementById('namesInput');
+    const privacyToggle = document.getElementById('privacyToggle');
+    const toggleInputBtn = document.getElementById('toggleInputBtn');
+    const startBtn = document.getElementById('startBtn');
+    const inputControls = document.getElementById('inputControls');
+    const grid = document.getElementById('grid');
+    const instructions = document.getElementById('instructions');
+    const toggleInstrBtn = document.getElementById('toggleInstrBtn');
+    const demoBtn = document.getElementById('demoBtn');
+
+    const demoNames = `Aarav Miller
+Aiko Moore
+Akira Jones
+Alexander Williams
+Amelia Lopez
+Anjali Hernandez
+Anya Smith
+Ava Jackson
+Bao Martin
+Benjamin Johnson
+Bianca Garcia
+Binh Garcia
+Bo Thomas
+Boris Wilson
+Carlos Lopez
+Celeste Martin
+Charlotte Wilson
+Chen Gonzalez
+Chloe Hernandez
+Chul Lopez
+Dara Jackson
+Darius Hernandez
+Deepa Moore
+Dmitri Anderson
+Duyen Hernandez
+Ehsan Martinez
+Eiko Lopez
+Elena Martinez
+Elijah Rodriguez
+Emma Martinez
+Emre Gonzalez
+Eun Thomas
+Evelyn Hernandez
+Fahim Martin
+Farah Wilson
+Farid Johnson
+Fatima Hernandez
+Florence Taylor
+Gianni Anderson
+Gita Wilson
+Gregor Lopez
+Guan Hernandez
+Gustav Jackson
+Hana Smith
+Harper Smith
+Haruto Thomas
+Hazel Martinez
+Helena Martin
+Henry Smith
+Hiro Williams
+Ibrahim Jackson
+Ilana Smith
+Indira Gonzalez
+Isabella Garcia
+Isha Jones
+Ivan Garcia
+James Brown
+Jasmine Thomas
+Jin Jackson
+Jiro Wilson
+Joon Brown
+Jorge Johnson
+Kaori Gonzalez
+Katia Martinez
+Keiko Brown
+Kiran Rodriguez
+Kota Smith
+Lan Garcia
+Leila Davis
+Liam Wilson
+Ling Brown
+Lior Taylor
+Lucas Taylor
+Luka Williams
+Marina Brown
+Mateo Gonzalez
+Mei Martinez
+Mia Taylor
+Min Williams
+Mina Anderson
+Naoki Brown
+Naomi Gonzalez
+Nikhil Moore
+Niko Garcia
+Noah Rodriguez
+Nora Jones
+Oksana Hernandez
+Oliver Rodriguez
+Olivia Rodriguez
+Omar Miller
+Ori Smith
+Orion Wilson
+Osamu Martin
+Paulo Rodriguez
+Pavel Williams
+Petra Williams
+Ping Jackson
+Priya Davis
+Qamar Smith
+Qi Williams
+Qiang Hernandez
+Qiuyue Anderson
+Quyen Anderson
+Raj Lopez
+Ravi Davis
+Raviya Moore
+Reza Martin
+Rosa Davis
+Sakura Jackson
+Sami Martinez
+Sang Davis
+Sergio Brown
+Sofia Rodriguez
+Sophia Jackson
+Takumi Martinez
+Tala Jones
+Tariq Anderson
+Tenzin Anderson
+Ting Martin
+Ujin Gonzalez
+Ulrik Thomas
+Uma Brown
+Usha Brown
+Usman Miller
+Valentina Brown
+Van Miller
+Vera Johnson
+Vihaan Anderson
+Vinh Taylor
+Waleed Brown
+Wei Jackson
+Wen Jackson
+Wenjie Davis
+Willa Martinez
+William Moore
+Xander Miller
+Xinyi Taylor
+Xiomara Jones
+Xue Davis
+Yara Wilson
+Yoshi Wilson
+Yuki Moore
+Yuna Davis
+Yusuf Johnson
+Zain Jones
+Zara Jackson
+Zhen Miller
+Zoya Taylor
+Zulema Anderson`;
+
+    function renderGrid() {
+      const raw = namesInput.value.trim().split('\n').slice(0, 300);
+      grid.innerHTML = '';
+      raw.forEach(fullName => {
+        const parts = fullName.trim().split(' ');
+        let display;
+        if (privacyToggle.checked) {
+          const first = parts[0] || '';
+          const lastInit = parts.length > 1 ? parts[parts.length-1].charAt(0) + '.' : '';
+          display = `${first} ${lastInit}`;
+        } else {
+          display = fullName;
+        }
+        const item = document.createElement('div');
+        item.className = 'grid-item';
+        item.textContent = display;
+        grid.appendChild(item);
+      });
+    }
+
+    function highlightItem(item) {
+      grid.querySelectorAll('.grid-item').forEach(i => i.classList.remove('highlight'));
+      item.classList.add('highlight');
+    }
+
+    function playBeep() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      osc.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.05);
+    }
+
+    function playHappy() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523.25, 659.25, 783.99];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.15);
+        osc.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.15);
+        osc.stop(ctx.currentTime + idx * 0.15 + 0.1);
+      });
+    }
+
+    function drawName() {
+      const items = Array.from(grid.querySelectorAll('.grid-item'));
+      if (!items.length) return;
+      let cycles = 0;
+      let interval = 100;
+      const maxCycles = 30;
+      const total = items.length;
+
+      function tick() {
+        const rnd = Math.floor(Math.random() * total);
+        highlightItem(items[rnd]);
+        cycles++;
+        if (cycles < maxCycles) {
+          playBeep();
+          interval += 15;
+          setTimeout(tick, interval);
+        } else {
+          playHappy();
+        }
+      }
+      tick();
+    }
+
+    namesInput.addEventListener('input', renderGrid);
+    privacyToggle.addEventListener('change', renderGrid);
+
+    toggleInputBtn.addEventListener('click', () => {
+      inputControls.style.display = inputControls.style.display === 'none' ? 'block' : 'none';
+    });
+
+    toggleInstrBtn.addEventListener('click', () => {
+      instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
+    });
+
+    demoBtn.addEventListener('click', () => {
+      namesInput.value = demoNames;
+      renderGrid();
+    });
+
+    startBtn.addEventListener('click', () => {
+      inputControls.style.display = 'none';
+      instructions.style.display = 'none';
+      drawName();
+    });
+  </script>
+</body>
+</html>
